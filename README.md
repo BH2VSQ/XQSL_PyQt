@@ -1,6 +1,7 @@
 # X-QSL Amateur Radio ADIF Tool · Python + PyQt6 v0.9
 
 基于原 X-QSL / CallSignAnalysis 项目的 Python + PyQt6 迁移版。
+原项目链接：https://gitee.com/yuzhenwu/x-qsl-amateur-radio-adif-tool
 
 ## 日志流程
 
@@ -14,20 +15,6 @@
 8. 表格显示呼号、卫星名称、时间和模式，模式为只读文本。
 9. 点击底部“导出ADIF”，生成并保存 ADIF 文件。
 
-## 界面
-
-窗口保持原有高度 722 像素，宽度扩展到 760 像素，使卫星、时间、模式和呼号输入区域具有更充足的横向空间。日志表格拉伸填充剩余区域。
-
-## 数据文件
-
-程序不再使用 `config` 文件夹。
-
-```text
- data/
- ├─ satellites.json
- └─ callsigns.txt
-```
-
 ## satellites.json
 
 卫星名称、别名、上下行频率和模式配置全部放在此文件中。一个卫星可以包含多个模式。
@@ -40,7 +27,7 @@
   "aliases": ["RS-44"],
   "uplink_mhz": 145.965,
   "downlink_mhz": 435.6,
-  "modes": ["SSB", "CW", "FT4", "SSTV"]
+  "modes": ["SSB", "CW"]
 }
 ```
 
@@ -50,10 +37,6 @@ FM 单模式卫星配置为单项 `modes` 数组，例如 `['FM']`。程序不�
 
 每行一个呼号。添加日志时，如果新呼号不存在于呼号库，程序会自动写入 `data/callsigns.txt`，并按照字母数字顺序重新排序。
 
-## 已移除
-
-TQSL、LoTW、eQSL、QRZ、账号设置、TQSL 台站设置、时间微调、中文转拼音、原自由文本 QSO 输入、旧版解析结果区域和表格内模式选择均已移除。
-
 ## 运行
 
 ```bash
@@ -61,4 +44,8 @@ pip install -r requirements.txt
 python main.py
 ```
 
-Windows 推荐 Python 3.11 或更高版本。
+## 编译
+
+```bash
+PyInstaller --clean --noconfirm --onefile --windowed --name XQSL_PyQt --icon=resources/app.ico --add-data "data;data" --add-data "resources;resources" main.py
+```
