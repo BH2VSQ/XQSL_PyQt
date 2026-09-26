@@ -5,6 +5,6 @@
     {"name": "AO-91","aliases": ["AO-91"],"uplink_mhz": 435.25,"downlink_mhz": 145.96,"modes": ["FM"]},
     {"name": "AO-123","aliases": ["AO-123","ASRTU-1"],"uplink_mhz": 145.85,"downlink_mhz": 435.4,"modes": ["FM"]},
     {"name": "ARISS","aliases": ["ARISS","ISS"],"uplink_mhz": 145.99,"downlink_mhz": 437.8,"modes": ["FM"]},
-    {"name": "RS-44","aliases": ["RS-44"],"uplink_mhz": 145.965,"downlink_mhz": 435.6,"modes": ["SSB","CW","FT4","SSTV"]}
+    {"name": "RS-44","aliases": ["RS-44"],"uplink_mhz": 145.965,"downlink_mhz": 435.6,"modes": ["SSB","CW"]}
   ]
 }

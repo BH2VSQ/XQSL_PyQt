@@ -37,7 +37,7 @@ class MainWindow(QMainWindow):
     SIDE_MARGIN = 13
     CONTENT_WIDTH = WINDOW_WIDTH - SIDE_MARGIN * 2
 
-    def __init__(self, root: Path):
+    def __init__(self, root: Path, icon_path: Path | None = None):
         super().__init__()
         self.root = root
         self.satellites = SatelliteManager(root / "data" / "satellites.json")
@@ -47,7 +47,7 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("卫星QSO记录软件,Modified from x-qsl-tool(BG5BTK,BH6BEZ)")
         self.setFixedSize(self.WINDOW_WIDTH, self.WINDOW_HEIGHT)
-        self.setWindowIcon(QIcon(str(root / "resources" / "app.ico")))
+        self.setWindowIcon(QIcon(str(icon_path or (root / "resources" / "app.ico"))))
 
         self._build_ui()
 
@@ -141,7 +141,7 @@ class MainWindow(QMainWindow):
         self.btn_openSourcePage.setObjectName("btn_openSourcePage")
         self.btn_openSourcePage.setGeometry(self.WINDOW_WIDTH - 111, 14, 98, 35)
         self.btn_openSourcePage.clicked.connect(
-            lambda: self.open_url("https://gitee.com/yuzhenwu/x-qsl-amateur-radio-adif-tool")
+            lambda: self.open_url("https://github.com/BH2VSQ/XQSL_PyQt")
         )
 
         self.satellite_combo = QComboBox(self)

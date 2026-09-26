@@ -15,6 +15,7 @@ class QSOData:
     qso_callsigns: list[str]
     mode: str
     band: str
+    signal_report: str = ""
 
 
 CALLSIGN_RE = re.compile(
@@ -82,6 +83,7 @@ class QSOEngine:
             )
 
         tx_band = "70CM" if 420 <= sat.uplink_mhz <= 450 else "2M"
+        signal_report = self.default_signal_report(mode)
         return QSOData(
             freq=sat.frequency_text,
             qsotime=qso_time,
@@ -89,7 +91,17 @@ class QSOEngine:
             qso_callsigns=[call],
             mode=mode,
             band=tx_band,
+            signal_report=signal_report,
         )
+
+    @staticmethod
+    def default_signal_report(mode: str) -> str:
+        normalized = mode.strip().upper()
+        if normalized in {"FM", "SSB"}:
+            return "59"
+        if normalized == "CW":
+            return "599"
+        return ""
 
     @staticmethod
     def generate_adif_file(qso_list: list[QSOData]) -> str:
@@ -131,6 +143,13 @@ class QSOEngine:
                     f"<FREQ_RX:{len(rx_freq)}>{rx_freq}",
                     "<PROP_MODE:3>SAT",
                     f"<SAT_NAME:{len(qso.satelitename)}>{qso.satelitename}",
+                ])
+
+                if qso.signal_report:
+                    lines.append(f"<RST_SENT:{len(qso.signal_report)}>{qso.signal_report}")
+                    lines.append(f"<RST_RCVD:{len(qso.signal_report)}>{qso.signal_report}")
+
+                lines.extend([
                     "<EOR>",
                 ])
 
