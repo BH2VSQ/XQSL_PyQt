@@ -1,4 +1,5 @@
 from __future__ import annotations
+from .station_config import StationConfig
 
 import webbrowser
 from pathlib import Path
@@ -42,6 +43,7 @@ class MainWindow(QMainWindow):
         self.root = root
         self.satellites = SatelliteManager(root / "data" / "satellites.json")
         self.callsigns = CallsignDatabase(root)
+        self.station = StationConfig(root)
         self.engine = QSOEngine(self.satellites)
         self.qso_list: list[QSOData] = []
 
@@ -121,8 +123,16 @@ class MainWindow(QMainWindow):
             """
         )
 
-        self.lab_inputInfo = QLabel("卫星日志：选择卫星和时间", self)
-        self.lab_inputInfo.setGeometry(self.SIDE_MARGIN, 14, 330, 35)
+        self.station_call_edit = QLineEdit(self)
+        self.station_call_edit.setGeometry(self.SIDE_MARGIN,14,150,35)
+        self.station_call_edit.setPlaceholderText("台站呼号")
+        self.station_grid_edit = QLineEdit(self)
+        self.station_grid_edit.setGeometry(170,14,120,35)
+        self.station_grid_edit.setPlaceholderText("四位网格")
+        self.station_call_edit.setText(self.station.callsign)
+        self.station_grid_edit.setText(self.station.grid)
+        self.station_call_edit.editingFinished.connect(self.save_station_info)
+        self.station_grid_edit.editingFinished.connect(self.save_station_info)
 
         self.time_mode_set = QRadioButton("设定", self)
         self.time_mode_set.setGeometry(352, 17, 60, 30)
@@ -233,6 +243,11 @@ class MainWindow(QMainWindow):
 
     def _current_satellite(self):
         return self.satellites.get(self.satellite_combo.currentText().strip())
+    
+    def save_station_info(self):
+        callsign = (self.station_call_edit.text().strip().upper())
+        grid = (self.station_grid_edit.text().strip().upper())
+        self.station.save(callsign,grid)
 
     def _clear_mode_buttons(self) -> None:
         while self.mode_buttons_layout.count():
@@ -397,7 +412,9 @@ class MainWindow(QMainWindow):
                         row_time=row_time,
                         default_dt=snapshot_dt,
                         mode_override=row_mode,
-                    )
+                        station_callsign=self.station.callsign,
+                        station_grid=self.station.grid,
+                        )
                 )
             except ValueError as exc:
                 errors.append(f"第 {row + 1} 行：{exc}")
@@ -428,15 +445,12 @@ class MainWindow(QMainWindow):
         except OSError as exc:
             QMessageBox.critical(self, "保存失败", f"无法保存 ADIF 文件：\n{exc}")
             return
-
-        self.lab_inputInfo.setText("ADIF 导出完成，可继续添加呼号")
         QMessageBox.information(self, "完成", f"ADIF 已保存：\n{path}")
 
     def clear_all(self) -> None:
         self.call_table.setRowCount(0)
         self.callsign_edit.clear()
         self.qso_list = []
-        self.lab_inputInfo.setText("卫星日志：选择卫星和时间")
 
     @staticmethod
     def open_url(url: str) -> None:

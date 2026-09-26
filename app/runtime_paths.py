@@ -32,7 +32,7 @@ def prepare_data_directory() -> Path:
     target.mkdir(parents=True, exist_ok=True)
 
     bundled = bundled_dir() / "data"
-    for filename in ("satellites.json", "callsigns.txt"):
+    for filename in ("satellites.json", "callsigns.txt", "station.json"):
         dst = target / filename
         src = bundled / filename
         if not dst.exists() and src.exists():

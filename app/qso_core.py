@@ -15,6 +15,8 @@ class QSOData:
     qso_callsigns: list[str]
     mode: str
     band: str
+    station_callsign: str = ""
+    station_grid: str = ""
     signal_report: str = ""
 
 
@@ -65,6 +67,8 @@ class QSOEngine:
         row_time: str,
         default_dt: datetime,
         mode_override: str | None = None,
+        station_callsign: str = "",
+        station_grid: str = "",
     ) -> QSOData:
         sat = self.satellite_manager.get(satellite_name)
         if sat is None:
@@ -91,8 +95,10 @@ class QSOEngine:
             qso_callsigns=[call],
             mode=mode,
             band=tx_band,
+            station_callsign=station_callsign,
+            station_grid=station_grid,
             signal_report=signal_report,
-        )
+)
 
     @staticmethod
     def default_signal_report(mode: str) -> str:
@@ -148,9 +154,14 @@ class QSOEngine:
                 if qso.signal_report:
                     lines.append(f"<RST_SENT:{len(qso.signal_report)}>{qso.signal_report}")
                     lines.append(f"<RST_RCVD:{len(qso.signal_report)}>{qso.signal_report}")
+                if qso.station_callsign:
+                    lines.append(f"<STATION_CALLSIGN:{len(qso.station_callsign)}>{qso.station_callsign}")
+                if qso.station_grid:
+                    lines.append(f"<MY_GRIDSQUARE:{len(qso.station_grid)}>{qso.station_grid}")
 
                 lines.extend([
                     "<EOR>",
                 ])
+                
 
         return "\n".join(lines) + "\n"
