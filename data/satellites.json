@@ -1,10 +1,13 @@
 {
   "version": 1,
   "satellites": [
-    {"name": "SO-50","aliases": ["SO-50","SAUDISAT-1C","SAUDISAT1C"],"uplink_mhz": 145.85,"downlink_mhz": 436.795,"modes": ["FM"]},
-    {"name": "AO-91","aliases": ["AO-91"],"uplink_mhz": 435.25,"downlink_mhz": 145.96,"modes": ["FM"]},
-    {"name": "AO-123","aliases": ["AO-123","ASRTU-1"],"uplink_mhz": 145.85,"downlink_mhz": 435.4,"modes": ["FM"]},
-    {"name": "ARISS","aliases": ["ARISS","ISS"],"uplink_mhz": 145.99,"downlink_mhz": 437.8,"modes": ["FM"]},
-    {"name": "RS-44","aliases": ["RS-44"],"uplink_mhz": 145.965,"downlink_mhz": 435.6,"modes": ["SSB","CW"]}
+    {"name": "SO-50","aliases": ["SO-50","SAUDISAT-1C","SAUDISAT1C"],"uplink_mhz": 145.850,"downlink_mhz": 436.795,"modes": ["FM"]},
+    {"name": "AO-91","aliases": ["AO-91"],"uplink_mhz": 435.250,"downlink_mhz": 145.960,"modes": ["FM"]},
+    {"name": "AO-123","aliases": ["AO-123","ASRTU-1"],"uplink_mhz": 145.850,"downlink_mhz": 435.400,"modes": ["FM"]},
+    {"name": "ARISS","aliases": ["ARISS","ISS"],"uplink_mhz": 145.990,"downlink_mhz": 437.800,"modes": ["FM"]},
+    {"name": "RS-44","aliases": ["RS-44"],"uplink_mhz": 145.965,"downlink_mhz": 435.600,"modes": ["SSB","CW"]},
+    {"name": "FO-29","aliases": ["FO-29"],"uplink_mhz": 145.950,"downlink_mhz": 435.850,"modes": ["SSB","CW"]},
+    {"name": "AO-73","aliases": ["AO-73"],"uplink_mhz": 435.140,"downlink_mhz": 145.960,"modes": ["SSB","CW"]},
+    {"name": "AO-7","aliases": ["AO-7"],"uplink_mhz": 432.150,"downlink_mhz": 145.950,"modes": ["SSB","CW"]}
   ]
 }
