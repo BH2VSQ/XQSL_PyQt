@@ -3,8 +3,9 @@ from .station_config import StationConfig
 
 import webbrowser
 from pathlib import Path
+from datetime import timezone
 
-from PyQt6.QtCore import Qt, QDateTime, QTimer, QStringListModel
+from PyQt6.QtCore import Qt, QDateTime, QTimer, QTimeZone, QStringListModel
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
     QButtonGroup,
@@ -139,7 +140,7 @@ class MainWindow(QMainWindow):
         self.time_mode_realtime = QRadioButton("实时", self)
         self.time_mode_realtime.setGeometry(413, 17, 60, 30)
         self.time_mode_set.setChecked(True)
-        self.time_mode_set.setToolTip("设定：手动选择日志时间")
+        self.time_mode_set.setToolTip("设定：手动选择 UTC 日志时间")
         self.time_mode_realtime.setToolTip("实时：顶部时间自动跟随当前 UTC 时间")
         self.time_mode_group = QButtonGroup(self)
         self.time_mode_group.setExclusive(True)
@@ -162,6 +163,7 @@ class MainWindow(QMainWindow):
         self.datetime_edit.setGeometry(273, 59, 310, 35)
         self.datetime_edit.setDisplayFormat("yyyy-MM-dd HH:mm:ss")
         self.datetime_edit.setCalendarPopup(True)
+        self.datetime_edit.setTimeZone(QTimeZone.utc())
         self.datetime_edit.setDateTime(QDateTime.currentDateTimeUtc())
 
         self.clear_btn = QPushButton("清空", self)
@@ -311,7 +313,10 @@ class MainWindow(QMainWindow):
             self.datetime_edit.setDateTime(QDateTime.currentDateTimeUtc())
 
     def _selected_datetime(self):
-        return self.datetime_edit.dateTime().toPyDateTime().replace(tzinfo=None, microsecond=0)
+        dt = self.datetime_edit.dateTime().toPyDateTime()
+        if dt.tzinfo is not None:
+            dt = dt.astimezone(timezone.utc).replace(tzinfo=None)
+        return dt.replace(microsecond=0)
 
     def add_log_row(self) -> None:
         call = self.callsign_edit.text().strip().upper()
