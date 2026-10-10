@@ -5,6 +5,7 @@
     {"name": "AO-91","aliases": ["AO-91"],"uplink_mhz": 435.250,"downlink_mhz": 145.960,"modes": ["FM"]},
     {"name": "AO-123","aliases": ["AO-123","ASRTU-1"],"uplink_mhz": 145.850,"downlink_mhz": 435.400,"modes": ["FM"]},
     {"name": "ARISS","aliases": ["ARISS","ISS"],"uplink_mhz": 145.990,"downlink_mhz": 437.800,"modes": ["FM"]},
+    {"name": "RS95S","aliases": ["RS95S","QMR-KWT 2"],"uplink_mhz": 145.920,"downlink_mhz": 436.950,"modes": ["FM"]},
     {"name": "RS-44","aliases": ["RS-44"],"uplink_mhz": 145.965,"downlink_mhz": 435.600,"modes": ["SSB","CW"]},
     {"name": "FO-29","aliases": ["FO-29"],"uplink_mhz": 145.950,"downlink_mhz": 435.850,"modes": ["SSB","CW"]},
     {"name": "AO-73","aliases": ["AO-73"],"uplink_mhz": 435.140,"downlink_mhz": 145.960,"modes": ["SSB","CW"]},
