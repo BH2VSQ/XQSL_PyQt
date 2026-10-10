@@ -5,9 +5,18 @@ import webbrowser
 from pathlib import Path
 from datetime import timezone
 
-from PyQt6.QtCore import Qt, QDateTime, QTimer, QTimeZone, QStringListModel
+from PyQt6.QtCore import (
+    Qt,
+    QDateTime,
+    QThread,
+    QTimer,
+    QTimeZone,
+    QStringListModel,
+    pyqtSignal,
+)
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
+    QApplication,
     QButtonGroup,
     QCompleter,
     QComboBox,
@@ -26,9 +35,34 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from . import updater
 from .callsign_db import CallsignDatabase
 from .qso_core import QSOData, QSOEngine
 from .satellite_manager import SatelliteManager
+
+
+class UpdateWorker(QThread):
+    """Run update checks/downloads off the UI thread, reporting via a signal."""
+
+    result_ready = pyqtSignal(dict)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._action = "check"
+        self._url = ""
+
+    def set_download(self, url: str) -> None:
+        self._action = "download"
+        self._url = url
+
+    def run(self) -> None:
+        try:
+            if self._action == "check":
+                self.result_ready.emit(updater.check_for_update())
+            else:
+                self.result_ready.emit({"downloaded": updater.download_and_prepare(self._url)})
+        except Exception as exc:  # network / IO failures surface to the UI
+            self.result_ready.emit({"error": str(exc)})
 
 
 class MainWindow(QMainWindow):
@@ -105,6 +139,12 @@ class MainWindow(QMainWindow):
             }
             QPushButton#btn_openSourcePage:hover { background: #663AB7; color: #FFFFFF; }
             QPushButton#btn_openSourcePage:pressed { background: #522E93; color: #FFFFFF; }
+            QPushButton#btn_checkUpdate {
+                background: #EAF6F3; color: #1E9E7B; border: 1px solid #1E9E7B;
+            }
+            QPushButton#btn_checkUpdate:hover { background: #1E9E7B; color: #FFFFFF; }
+            QPushButton#btn_checkUpdate:pressed { background: #178A6A; color: #FFFFFF; }
+            QPushButton#btn_checkUpdate:disabled { color: #9B9B9B; border-color: #C7C7C7; background: #F0F0F0; }
             QPushButton#clear_btn {
                 background: #FBEEEE; color: #E65050; border: 1px solid #E65050;
             }
@@ -147,6 +187,12 @@ class MainWindow(QMainWindow):
         self.time_mode_group.addButton(self.time_mode_set)
         self.time_mode_group.addButton(self.time_mode_realtime)
         self.time_mode_set.toggled.connect(self._on_time_mode_changed)
+
+        self.btn_checkUpdate = QPushButton("检查更新", self)
+        self.btn_checkUpdate.setObjectName("btn_checkUpdate")
+        self.btn_checkUpdate.setGeometry(543, 14, 98, 35)
+        self.btn_checkUpdate.setToolTip("检查 GitHub Release 是否有新版本并自动更新")
+        self.btn_checkUpdate.clicked.connect(self._check_update)
 
         self.btn_openSourcePage = QPushButton("项目开源", self)
         self.btn_openSourcePage.setObjectName("btn_openSourcePage")
@@ -456,6 +502,68 @@ class MainWindow(QMainWindow):
         self.call_table.setRowCount(0)
         self.callsign_edit.clear()
         self.qso_list = []
+
+    def _check_update(self) -> None:
+        self._set_update_busy("检查中…")
+        worker = UpdateWorker(self)
+        worker.result_ready.connect(self._on_update_checked)
+        worker.finished.connect(worker.deleteLater)
+        worker.start()
+
+    def _set_update_busy(self, text: str) -> None:
+        self.btn_checkUpdate.setEnabled(False)
+        self.btn_checkUpdate.setText(text)
+
+    def _reset_update_button(self) -> None:
+        self.btn_checkUpdate.setEnabled(True)
+        self.btn_checkUpdate.setText("检查更新")
+
+    def _on_update_checked(self, info: dict) -> None:
+        if info.get("error"):
+            self._reset_update_button()
+            QMessageBox.warning(self, "检查更新失败", info["error"])
+            return
+
+        if not info.get("update_available"):
+            self._reset_update_button()
+            QMessageBox.information(self, "检查更新", "当前已是最新版本。")
+            return
+
+        if not info.get("can_self_update"):
+            # Running from source: cannot replace the interpreter, just open the page.
+            self._reset_update_button()
+            QMessageBox.information(
+                self,
+                "发现新版本",
+                f"发现新版本 {info.get('latest')}，当前 {info.get('current')}。\n"
+                "开发模式无法自动更新，已打开下载页面。",
+            )
+            if info.get("html_url"):
+                self.open_url(info["html_url"])
+            return
+
+        if not info.get("download_url"):
+            self._reset_update_button()
+            QMessageBox.warning(self, "检查更新", "未找到可用的更新包，请前往发布页手动下载。")
+            if info.get("html_url"):
+                self.open_url(info["html_url"])
+            return
+
+        self._set_update_busy("下载并更新中…")
+        worker = UpdateWorker(self)
+        worker.set_download(info["download_url"])
+        worker.result_ready.connect(self._on_update_downloaded)
+        worker.finished.connect(worker.deleteLater)
+        worker.start()
+
+    def _on_update_downloaded(self, info: dict) -> None:
+        if info.get("error") or not info.get("downloaded"):
+            self._reset_update_button()
+            QMessageBox.warning(self, "更新失败", info.get("error") or "下载更新包失败。")
+            return
+
+        updater.apply_downloaded()
+        QApplication.quit()
 
     @staticmethod
     def open_url(url: str) -> None:

@@ -74,14 +74,34 @@ class CallsignDatabase:
         return True
 
     def search(self, query: str, limit: int = 80) -> list[str]:
-        q = self._normalize(query)
+        # Drop whitespace so partial input like "B SQ" matches "BH2VSQ".
+        q = "".join(self._normalize(query).split())
         callsigns = self._read()
         if not q:
             return callsigns[:limit]
 
-        prefix = [call for call in callsigns if call.startswith(q)]
-        contains = [call for call in callsigns if q in call and not call.startswith(q)]
-        return (prefix + contains)[:limit]
+        prefix: list[str] = []
+        contains: list[str] = []
+        subsequence: list[str] = []
+        for call in callsigns:
+            if call.startswith(q):
+                prefix.append(call)
+            elif q in call:
+                contains.append(call)
+            elif self._is_subsequence(q, call):
+                subsequence.append(call)
+        return (prefix + contains + subsequence)[:limit]
+
+    @staticmethod
+    def _is_subsequence(q: str, text: str) -> bool:
+        """True when q's characters appear in ``text`` in order (not necessarily adjacent)."""
+        pos = 0
+        for ch in q:
+            pos = text.find(ch, pos)
+            if pos == -1:
+                return False
+            pos += 1
+        return True
 
     def all_callsigns(self) -> list[str]:
         return self._read()

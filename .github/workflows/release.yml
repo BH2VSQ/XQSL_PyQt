@@ -1,0 +1,62 @@
+name: Build & Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Bump version
+        id: bump
+        shell: bash
+        run: |
+          VERSION=$(tr -d '\r\n' < resources/version.txt)
+          BODY="${VERSION#V}"
+          MAJOR="${BODY%%.*}"
+          MINOR="${BODY##*.}"
+          NEW="V${MAJOR}.$((MINOR + 1))"
+          printf '%s\n' "$NEW" > resources/version.txt
+          echo "current=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "version=$NEW" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build executable
+        run: |
+          pyinstaller --clean --noconfirm --onefile --windowed --name XQSL_PyQt --icon=resources/app.ico --add-data "data;data" --add-data "resources;resources" main.py
+
+      - name: Commit version bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add resources/version.txt
+          git commit -m "chore: bump version to ${{ steps.bump.outputs.version }}" || echo "no change"
+          git push origin HEAD:main
+
+      - name: Create tag and release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git tag "${{ steps.bump.outputs.version }}"
+          git push origin "${{ steps.bump.outputs.version }}"
+          gh release create "${{ steps.bump.outputs.version }}" dist/XQSL_PyQt.exe --generate-notes
