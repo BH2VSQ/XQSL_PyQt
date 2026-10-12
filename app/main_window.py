@@ -8,6 +8,7 @@ from datetime import timezone
 from PyQt6.QtCore import (
     Qt,
     QDateTime,
+    QSettings,
     QThread,
     QTimer,
     QTimeZone,
@@ -39,6 +40,13 @@ from . import updater
 from .callsign_db import CallsignDatabase
 from .qso_core import QSOData, QSOEngine
 from .satellite_manager import SatelliteManager
+
+
+class CallsignCompleter(QCompleter):
+    """Use the ranked search results without Qt filtering them a second time."""
+
+    def splitPath(self, path: str) -> list[str]:
+        return [""]
 
 
 class UpdateWorker(QThread):
@@ -81,6 +89,7 @@ class MainWindow(QMainWindow):
         self.station = StationConfig(root)
         self.engine = QSOEngine(self.satellites)
         self.qso_list: list[QSOData] = []
+        self.settings = QSettings("BH2VSQ", "XQSL_PyQt")
 
         self.setWindowTitle("卫星QSO记录软件,Modified from x-qsl-tool(BG5BTK,BH6BEZ)")
         self.setFixedSize(self.WINDOW_WIDTH, self.WINDOW_HEIGHT)
@@ -179,7 +188,11 @@ class MainWindow(QMainWindow):
         self.time_mode_set.setGeometry(352, 17, 60, 30)
         self.time_mode_realtime = QRadioButton("实时", self)
         self.time_mode_realtime.setGeometry(413, 17, 60, 30)
-        self.time_mode_set.setChecked(True)
+        saved_time_mode = str(self.settings.value("time_mode", "set")).strip().lower()
+        if saved_time_mode == "realtime":
+            self.time_mode_realtime.setChecked(True)
+        else:
+            self.time_mode_set.setChecked(True)
         self.time_mode_set.setToolTip("设定：手动选择 UTC 日志时间")
         self.time_mode_realtime.setToolTip("实时：顶部时间自动跟随当前 UTC 时间")
         self.time_mode_group = QButtonGroup(self)
@@ -187,6 +200,7 @@ class MainWindow(QMainWindow):
         self.time_mode_group.addButton(self.time_mode_set)
         self.time_mode_group.addButton(self.time_mode_realtime)
         self.time_mode_set.toggled.connect(self._on_time_mode_changed)
+        self.time_mode_realtime.toggled.connect(self._on_time_mode_changed)
 
         self.btn_checkUpdate = QPushButton("检查更新", self)
         self.btn_checkUpdate.setObjectName("btn_checkUpdate")
@@ -275,10 +289,11 @@ class MainWindow(QMainWindow):
         self.utc_timer.setInterval(1000)
         self.utc_timer.timeout.connect(self._update_realtime_clock)
         self.utc_timer.start()
+        self._on_time_mode_changed(True)
 
     def _init_call_completer(self) -> None:
         self.completer_model = QStringListModel()
-        self.completer = QCompleter(self.completer_model, self)
+        self.completer = CallsignCompleter(self.completer_model, self)
         self.completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self.completer.setFilterMode(Qt.MatchFlag.MatchContains)
         self.completer.setCompletionMode(QCompleter.CompletionMode.PopupCompletion)
@@ -351,12 +366,19 @@ class MainWindow(QMainWindow):
             return
         realtime = self.time_mode_realtime.isChecked()
         self.datetime_edit.setReadOnly(realtime)
+        self.settings.setValue("time_mode", "realtime" if realtime else "set")
+        self.settings.sync()
         if realtime:
             self._update_realtime_clock()
 
     def _update_realtime_clock(self) -> None:
         if self.time_mode_realtime.isChecked():
             self.datetime_edit.setDateTime(QDateTime.currentDateTimeUtc())
+
+    def closeEvent(self, event) -> None:
+        self.settings.setValue("time_mode", "realtime" if self.time_mode_realtime.isChecked() else "set")
+        self.settings.sync()
+        super().closeEvent(event)
 
     def _selected_datetime(self):
         dt = self.datetime_edit.dateTime().toPyDateTime()
