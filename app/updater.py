@@ -123,6 +123,9 @@ if exist "%new%" (
     set /a tries+=1
     if !tries! lss 15 goto retry
 )
-if exist "%app%" start "" "%app%"
+if exist "%app%" (
+    set "PYINSTALLER_RESET_ENVIRONMENT=1"
+    start "" "%app%"
+)
 del "%~f0" >nul 2>&1
 """
