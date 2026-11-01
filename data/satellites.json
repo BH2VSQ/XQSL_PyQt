@@ -7,7 +7,7 @@
     {"name": "ARISS","aliases": ["ARISS","ISS"],"uplink_mhz": 145.990,"downlink_mhz": 437.800,"modes": ["FM"]},
     {"name": "IO-86","aliases": ["IO-86","LAPAN-ORARI"],"uplink_mhz": 145.880,"downlink_mhz": 435.880,"modes": ["FM"]},
     {"name": "RS95S","aliases": ["RS95S","QMR-KWT 2"],"uplink_mhz": 145.920,"downlink_mhz": 436.950,"modes": ["FM"]},
-    {"name": "RS-44","aliases": ["RS-44"],"uplink_mhz": 145.965,"downlink_mhz": 435.600,"modes": ["SSB","CW"]},
+    {"name": "RS-44","aliases": ["RS-44"],"uplink_mhz": 145.965,"downlink_mhz": 435.600,"modes": ["SSB","CW","SSTV"]},
     {"name": "FO-29","aliases": ["FO-29"],"uplink_mhz": 145.950,"downlink_mhz": 435.850,"modes": ["SSB","CW"]},
     {"name": "AO-73","aliases": ["AO-73"],"uplink_mhz": 435.140,"downlink_mhz": 145.960,"modes": ["SSB","CW"]},
     {"name": "AO-7","aliases": ["AO-7"],"uplink_mhz": 432.150,"downlink_mhz": 145.950,"modes": ["SSB","CW"]}
