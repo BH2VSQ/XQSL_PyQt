@@ -1,15 +1,158 @@
 {
-  "version": 1,
+  "version": 2,
   "satellites": [
-    {"name": "SO-50","aliases": ["SO-50","SAUDISAT-1C","SAUDISAT1C"],"uplink_mhz": 145.850,"downlink_mhz": 436.795,"modes": ["FM"]},
-    {"name": "AO-91","aliases": ["AO-91"],"uplink_mhz": 435.250,"downlink_mhz": 145.960,"modes": ["FM"]},
-    {"name": "AO-123","aliases": ["AO-123","ASRTU-1"],"uplink_mhz": 145.850,"downlink_mhz": 435.400,"modes": ["FM"]},
-    {"name": "ARISS","aliases": ["ARISS","ISS"],"uplink_mhz": 145.990,"downlink_mhz": 437.800,"modes": ["FM"]},
-    {"name": "IO-86","aliases": ["IO-86","LAPAN-ORARI"],"uplink_mhz": 145.880,"downlink_mhz": 435.880,"modes": ["FM"]},
-    {"name": "RS95S","aliases": ["RS95S","QMR-KWT 2"],"uplink_mhz": 145.920,"downlink_mhz": 436.950,"modes": ["FM"]},
-    {"name": "RS-44","aliases": ["RS-44"],"uplink_mhz": 145.965,"downlink_mhz": 435.600,"modes": ["SSB","CW"]},
-    {"name": "FO-29","aliases": ["FO-29"],"uplink_mhz": 145.950,"downlink_mhz": 435.850,"modes": ["SSB","CW"]},
-    {"name": "AO-73","aliases": ["AO-73"],"uplink_mhz": 435.140,"downlink_mhz": 145.960,"modes": ["SSB","CW"]},
-    {"name": "AO-7","aliases": ["AO-7"],"uplink_mhz": 432.150,"downlink_mhz": 145.950,"modes": ["SSB","CW"]}
+    {
+      "name": "SO-50",
+      "aliases": [
+        "SO-50",
+        "SAUDISAT-1C",
+        "SAUDISAT1C"
+      ],
+      "uplink_mhz": 145.85,
+      "downlink_mhz": 436.795,
+      "modes": [
+        "FM"
+      ]
+    },
+    {
+      "name": "AO-91",
+      "aliases": [
+        "AO-91"
+      ],
+      "uplink_mhz": 435.25,
+      "downlink_mhz": 145.96,
+      "modes": [
+        "FM"
+      ]
+    },
+    {
+      "name": "AO-123",
+      "aliases": [
+        "AO-123",
+        "ASRTU-1"
+      ],
+      "uplink_mhz": 145.85,
+      "downlink_mhz": 435.4,
+      "modes": [
+        "FM"
+      ]
+    },
+    {
+      "name": "ARISS",
+      "aliases": [
+        "ARISS",
+        "ISS"
+      ],
+      "uplink_mhz": 145.99,
+      "downlink_mhz": 437.8,
+      "modes": [
+        "FM"
+      ]
+    },
+    {
+      "name": "IO-86",
+      "aliases": [
+        "IO-86",
+        "LAPAN-ORARI"
+      ],
+      "uplink_mhz": 145.88,
+      "downlink_mhz": 435.88,
+      "modes": [
+        "FM"
+      ]
+    },
+    {
+      "name": "RS95S",
+      "aliases": [
+        "RS95S",
+        "QMR-KWT 2"
+      ],
+      "uplink_mhz": 145.92,
+      "downlink_mhz": 436.95,
+      "modes": [
+        "FM"
+      ]
+    },
+    {
+      "name": "RS-44",
+      "aliases": [
+        "RS-44"
+      ],
+      "uplink_mhz": 145.965,
+      "downlink_mhz": 435.6,
+      "modes": [
+        "SSB",
+        "CW",
+        "SSTV"
+      ]
+    },
+    {
+      "name": "FO-29",
+      "aliases": [
+        "FO-29"
+      ],
+      "uplink_mhz": 145.95,
+      "downlink_mhz": 435.85,
+      "modes": [
+        "SSB",
+        "CW"
+      ]
+    },
+    {
+      "name": "AO-73",
+      "aliases": [
+        "AO-73"
+      ],
+      "uplink_mhz": 435.14,
+      "downlink_mhz": 145.96,
+      "modes": [
+        "SSB",
+        "CW"
+      ]
+    },
+    {
+      "name": "AO-7",
+      "aliases": [
+        "AO-7"
+      ],
+      "uplink_mhz": 432.15,
+      "downlink_mhz": 145.95,
+      "modes": [
+        "SSB",
+        "CW"
+      ]
+    },
+    {
+      "name": "ARISS-APRS",
+      "aliases": [
+        "ARISS-APRS"
+      ],
+      "adif_name": "ARISS",
+      "uplink_mhz": 145.825,
+      "downlink_mhz": 145.825,
+      "frequency_options_mhz": [
+        145.825,
+        437.825,
+        437.55
+      ],
+      "modes": [
+        "PKT"
+      ]
+    },
+    {
+      "name": "SONATE-2-APRS",
+      "aliases": [
+        "SONATE-2-APRS"
+      ],
+      "adif_name": "SONATE",
+      "uplink_mhz": 145.825,
+      "downlink_mhz": 145.825,
+      "frequency_options_mhz": [
+        145.825
+      ],
+      "modes": [
+        "PKT"
+      ]
+    }
   ]
 }

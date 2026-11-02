@@ -17,7 +17,7 @@ from pathlib import Path
 
 from .runtime_paths import resource_path
 
-REPO = "BH2VSQ/XQSL_PyQt"
+REPO = "VSQ-Studio/XQSL_PyQt"
 LATEST_RELEASE_URL = f"https://api.github.com/repos/{REPO}/releases/latest"
 USER_AGENT = "XQSL-PyQt-Updater"
 
