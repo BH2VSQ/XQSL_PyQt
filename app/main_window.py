@@ -250,6 +250,11 @@ class MainWindow(QMainWindow):
         self.mode_group = QButtonGroup(self)
         self.mode_group.setExclusive(True)
 
+        self.frequency_combo = QComboBox(self)
+        self.frequency_combo.setGeometry(273, 98, 335, 35)
+        self.frequency_combo.setVisible(False)
+        self.frequency_combo.setToolTip("选择本次 APRS 通联使用的收发同频频率")
+
         self.call_table = QTableWidget(self)
         self.call_table.setGeometry(
             self.SIDE_MARGIN,
@@ -257,8 +262,8 @@ class MainWindow(QMainWindow):
             self.CONTENT_WIDTH,
             496,
         )
-        self.call_table.setColumnCount(5)
-        self.call_table.setHorizontalHeaderLabels(["呼号", "卫星名称", "时间", "模式", "删除"])
+        self.call_table.setColumnCount(6)
+        self.call_table.setHorizontalHeaderLabels(["呼号", "卫星名称", "时间(UTC)", "频率", "模式", "删除"])
         self.call_table.verticalHeader().setVisible(False)
         self.call_table.verticalHeader().setDefaultSectionSize(32)
         self.call_table.setEditTriggers(
@@ -272,8 +277,10 @@ class MainWindow(QMainWindow):
         self.call_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
         self.call_table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Fixed)
         self.call_table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.Fixed)
-        self.call_table.setColumnWidth(3, 95)
-        self.call_table.setColumnWidth(4, 72)
+        self.call_table.horizontalHeader().setSectionResizeMode(5, QHeaderView.ResizeMode.Fixed)
+        self.call_table.setColumnWidth(3, 112)
+        self.call_table.setColumnWidth(4, 62)
+        self.call_table.setColumnWidth(5, 62)
         self.call_table.setRowCount(0)
 
         self.export_btn = QPushButton("导出ADIF", self)
@@ -324,9 +331,19 @@ class MainWindow(QMainWindow):
     def _update_mode_choices(self) -> None:
         sat = self._current_satellite()
         self._clear_mode_buttons()
+        self.mode_buttons_container.setVisible(False)
+        self.frequency_combo.clear()
+        self.frequency_combo.setVisible(False)
 
-        if sat is None or len(sat.modes) <= 1:
-            self.mode_buttons_container.setVisible(False)
+        if sat is None:
+            return
+
+        if sat.frequency_options_mhz:
+            for frequency in sat.frequency_options_mhz:
+                self.frequency_combo.addItem(f"{frequency:.3f} MHz", frequency)
+            self.frequency_combo.setVisible(True)
+
+        if len(sat.modes) <= 1:
             return
 
         mode_count = len(sat.modes)
@@ -360,6 +377,13 @@ class MainWindow(QMainWindow):
         if checked is not None and self.mode_buttons_container.isVisible():
             return checked.text().strip().upper()
         return sat.modes[0].strip().upper() if sat.modes else "FM"
+
+    def _selected_frequency_mhz(self) -> float | None:
+        sat = self._current_satellite()
+        if sat is None or not sat.frequency_options_mhz:
+            return None
+        value = self.frequency_combo.currentData()
+        return float(value) if value is not None else sat.frequency_options_mhz[0]
 
     def _on_time_mode_changed(self, checked: bool) -> None:
         if not checked:
@@ -401,6 +425,7 @@ class MainWindow(QMainWindow):
             self._update_realtime_clock()
         log_time = self.datetime_edit.dateTime().toString("yyyy-MM-dd HH:mm:ss")
         selected_mode = self._selected_mode()
+        selected_frequency = self._selected_frequency_mhz()
 
         row = self.call_table.rowCount()
         self.call_table.insertRow(row)
@@ -410,7 +435,19 @@ class MainWindow(QMainWindow):
         self.call_table.setItem(row, 0, call_item)
 
         satellite_item = QTableWidgetItem(sat.name)
+        satellite_item.setData(Qt.ItemDataRole.UserRole, sat.name)
+        satellite_item.setFlags(satellite_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
         self.call_table.setItem(row, 1, satellite_item)
+
+        if selected_frequency is not None:
+            frequency_text = f"{selected_frequency:.3f} MHz"
+        else:
+            frequency_text = f"{sat.frequency_text} MHz"
+        frequency_item = QTableWidgetItem(frequency_text)
+        frequency_item.setData(Qt.ItemDataRole.UserRole, selected_frequency)
+        frequency_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+        frequency_item.setFlags(frequency_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+        self.call_table.setItem(row, 3, frequency_item)
 
         time_item = QTableWidgetItem(log_time)
         time_item.setData(Qt.ItemDataRole.UserRole, log_time)
@@ -419,12 +456,12 @@ class MainWindow(QMainWindow):
         mode_item = QTableWidgetItem(selected_mode)
         mode_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
         mode_item.setFlags(mode_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-        self.call_table.setItem(row, 3, mode_item)
+        self.call_table.setItem(row, 4, mode_item)
 
         delete_btn = QPushButton("删除")
         delete_btn.setObjectName("delete_row")
         delete_btn.clicked.connect(lambda _checked=False, r=row: self.delete_log_row(r))
-        self.call_table.setCellWidget(row, 4, delete_btn)
+        self.call_table.setCellWidget(row, 5, delete_btn)
 
         self.callsigns.record(call)
         self.callsign_edit.clear()
@@ -433,7 +470,7 @@ class MainWindow(QMainWindow):
 
     def _renumber_delete_buttons(self) -> None:
         for row in range(self.call_table.rowCount()):
-            button = self.call_table.cellWidget(row, 4)
+            button = self.call_table.cellWidget(row, 5)
             if button is None:
                 continue
             try:
@@ -459,12 +496,22 @@ class MainWindow(QMainWindow):
             satellite_item = self.call_table.item(row, 1)
             time_item = self.call_table.item(row, 2)
             call = call_item.text().strip() if call_item else ""
-            satellite_name = satellite_item.text().strip() if satellite_item else ""
+            satellite_name = (
+                str(satellite_item.data(Qt.ItemDataRole.UserRole) or satellite_item.text()).strip()
+                if satellite_item else ""
+            )
+            frequency_item = self.call_table.item(row, 3)
+            row_frequency_value = (
+                frequency_item.data(Qt.ItemDataRole.UserRole) if frequency_item else None
+            )
+            row_frequency = (
+                float(row_frequency_value) if row_frequency_value is not None else None
+            )
             row_time = time_item.text().strip() if time_item else ""
             if not row_time and time_item is not None:
                 saved_time = time_item.data(Qt.ItemDataRole.UserRole)
                 row_time = str(saved_time or "").strip()
-            mode_item = self.call_table.item(row, 3)
+            mode_item = self.call_table.item(row, 4)
             row_mode = mode_item.text().strip().upper() if mode_item else ""
             if not row_mode and call_item is not None:
                 row_mode = str(call_item.data(Qt.ItemDataRole.UserRole) or "").strip().upper()
@@ -487,6 +534,7 @@ class MainWindow(QMainWindow):
                         mode_override=row_mode,
                         station_callsign=self.station.callsign,
                         station_grid=self.station.grid,
+                        frequency_override_mhz=row_frequency,
                         )
                 )
             except ValueError as exc:

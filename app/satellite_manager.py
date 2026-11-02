@@ -12,6 +12,8 @@ class Satellite:
     uplink_mhz: float
     downlink_mhz: float
     modes: tuple[str, ...] = ("FM",)
+    adif_name: str | None = None
+    frequency_options_mhz: tuple[float, ...] = ()
 
     @property
     def frequency_text(self) -> str:
@@ -50,6 +52,15 @@ class SatelliteManager:
                     uplink_mhz=float(item["uplink_mhz"]),
                     downlink_mhz=float(item["downlink_mhz"]),
                     modes=modes,
+                    adif_name=(
+                        str(item["adif_name"]).strip()
+                        if item.get("adif_name") is not None
+                        else None
+                    ),
+                    frequency_options_mhz=tuple(
+                        float(value)
+                        for value in item.get("frequency_options_mhz", [])
+                    ),
                 )
             )
 

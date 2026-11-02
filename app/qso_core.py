@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import re
 from dataclasses import dataclass
 from datetime import datetime
@@ -69,6 +70,7 @@ class QSOEngine:
         mode_override: str | None = None,
         station_callsign: str = "",
         station_grid: str = "",
+        frequency_override_mhz: float | None = None,
     ) -> QSOData:
         sat = self.satellite_manager.get(satellite_name)
         if sat is None:
@@ -86,12 +88,39 @@ class QSOEngine:
                 f"卫星 {sat.name} 不支持模式 {mode}，可选：{', '.join(sat.modes)}"
             )
 
-        tx_band = "70CM" if 420 <= sat.uplink_mhz <= 450 else "2M"
+        if sat.frequency_options_mhz:
+            if frequency_override_mhz is None:
+                selected_frequency = sat.frequency_options_mhz[0]
+            else:
+                try:
+                    selected_frequency = float(frequency_override_mhz)
+                except (TypeError, ValueError) as exc:
+                    raise ValueError(f"频率无效：{frequency_override_mhz}") from exc
+
+                if not any(
+                    math.isclose(selected_frequency, option, rel_tol=0.0, abs_tol=1e-6)
+                    for option in sat.frequency_options_mhz
+                ):
+                    choices = ", ".join(f"{value:.3f}" for value in sat.frequency_options_mhz)
+                    raise ValueError(
+                        f"卫星 {sat.name} 不支持频率 {selected_frequency:g} MHz，可选：{choices} MHz"
+                    )
+
+            # APRS 的同频单工记录，ADIF 的 FREQ 与 FREQ_RX 使用相同数值。
+            frequency_text = f"{selected_frequency:.3f}↑ {selected_frequency:.3f}↓"
+            tx_mhz = selected_frequency
+        else:
+            if frequency_override_mhz is not None:
+                raise ValueError(f"卫星 {sat.name} 不支持手动选择频率")
+            frequency_text = sat.frequency_text
+            tx_mhz = sat.uplink_mhz
+
+        tx_band = "70CM" if 420 <= tx_mhz <= 450 else "2M"
         signal_report = self.default_signal_report(mode)
         return QSOData(
-            freq=sat.frequency_text,
+            freq=frequency_text,
             qsotime=qso_time,
-            satelitename=sat.name,
+            satelitename=sat.adif_name or sat.name,
             qso_callsigns=[call],
             mode=mode,
             band=tx_band,
@@ -129,11 +158,10 @@ class QSOEngine:
             if len(numbers) < 2:
                 continue
 
-            tx_mhz = float(numbers[0])
-            rx_mhz = float(numbers[1])
+            tx_freq = numbers[0]
+            rx_freq = numbers[1]
+            rx_mhz = float(rx_freq)
             rx_band = "70CM" if 420 <= rx_mhz <= 450 else "2M"
-            tx_freq = f"{tx_mhz:g}"
-            rx_freq = f"{rx_mhz:g}"
 
             for call in qso.qso_callsigns:
                 if not call:
